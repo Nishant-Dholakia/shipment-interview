@@ -25,6 +25,19 @@ public class GlobalExceptionHandler {
                         ex.getMessage()
                 ));
     }
+    @ExceptionHandler(UsersAlreadyConnectedException.class)
+    public ResponseEntity<ErrorResponse> validation(
+            UsersAlreadyConnectedException ex){
+
+        Map<String,String> errors = new HashMap<>();
+
+        return ResponseEntity.badRequest()
+                .body(new ErrorResponse(
+                        LocalDateTime.now(),
+                        409,
+                        ex.getMessage()
+                ));
+    }
 
     @ExceptionHandler(BadRequestException.class)
     public ResponseEntity<ErrorResponse> handleBadRequest(
@@ -34,6 +47,18 @@ public class GlobalExceptionHandler {
                 .body(new ErrorResponse(
                         LocalDateTime.now(),
                         400,
+                        ex.getMessage()
+                ));
+    }
+
+    @ExceptionHandler(UserUnauthorizedException.class)
+    public ResponseEntity<ErrorResponse> handleUnauthorizedRequest(
+            BadRequestException ex) {
+
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(new ErrorResponse(
+                        LocalDateTime.now(),
+                        403,
                         ex.getMessage()
                 ));
     }
