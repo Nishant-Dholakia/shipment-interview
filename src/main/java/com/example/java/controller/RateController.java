@@ -32,13 +32,12 @@ public class RateController {
                 .body(rateService.createRate(current_user_id, request));
     }
 
-//    @PostMapping("/search")
-//    public ResponseEntity<RateSearchResponse> searchRate(
-//            @RequestHeader(name="current_user_id") Long current_user_id,
-//            @Valid @RequestBody RateSearchRequest rateSearchRequest
-//            ){
-//
-//        return ResponseEntity.ok()
-//                .body(rateService.searchRate(current_user_id, rateSearchRequest));
-//    }
+    @PostMapping("/search")
+    public ResponseEntity<RateSearchResponse> searchRate(
+            @RequestHeader(name="current_user_id") Long current_user_id,
+            @Valid @RequestBody RateSearchRequest rateSearchRequest
+            ){
+
+        return ResponseEntity.ok(rateService.searchRate(current_user_id, rateSearchRequest));
+    }
 }

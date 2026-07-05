@@ -4,10 +4,7 @@ package com.example.java.service;
 import com.example.java.dto.request.ConnectReplyRequest;
 import com.example.java.dto.request.ConnectRequest;
 import com.example.java.dto.request.UserCreateRequest;
-import com.example.java.dto.response.ConnectReplyResponseAccept;
-import com.example.java.dto.response.ConnectReplyResponseReject;
-import com.example.java.dto.response.ConnectRequestResponse;
-import com.example.java.dto.response.UserCreateResponse;
+import com.example.java.dto.response.*;
 import com.example.java.entity.Connection;
 import com.example.java.entity.ConnectionStatus;
 import com.example.java.entity.User;
@@ -61,12 +58,24 @@ public class UserService {
         if(Objects.equals(userId, connectRequest.getToUserId())){
             throw new BadRequestException("A user cannot connect with themselves" );
         }
-        User fromUser = userRepository.findById(userId.intValue()).get();
-        User touser = userRepository.findById(connectRequest.getToUserId().intValue()).get();
+
+        System.out.println("ConnectRequest");
+        User fromUser = userRepository.findById(userId.intValue())
+                .orElseThrow(() -> new ResourceNotFoundException("User with id " + userId + " not found"));
+        User touser = userRepository.findById(connectRequest.getToUserId().intValue())
+                .orElseThrow(() -> new ResourceNotFoundException("User with id " + connectRequest.getToUserId() + " not found"));
+
+        if(connectionRepository.existsByFromUserAndToUserAndStatusNot(fromUser, touser, ConnectionStatus.REJECTED)){
+            throw new BadRequestException("These users are already connected");
+
+        }
+
         Connection connection = new Connection();
         connection.setStatus(ConnectionStatus.PENDING);
         connection.setFromUser(fromUser);
         connection.setToUser(touser);
+
+
         connectionRepository.save(connection);
 
         ConnectRequestResponse connectRequestResponse =
@@ -79,7 +88,7 @@ public class UserService {
         return connectRequestResponse;
     }
 
-    public @Nullable Object connectResponse(Long currentUserId, ConnectReplyRequest connectReplyRequest) {
+    public @Nullable ConnectReplyResponse connectResponse(Long currentUserId, ConnectReplyRequest connectReplyRequest) {
         System.out.println(connectReplyRequest.getAction());
         if(!(Objects.equals(connectReplyRequest.getAction(), "ACCEPT") || Objects.equals(connectReplyRequest.getAction(), "REJECT"))) {
             throw new  BadRequestException("action must be either ACCEPT or REJECT");
@@ -93,33 +102,31 @@ public class UserService {
         }
 
         if(! connection.getToUser().getId().equals(currentUserId)) {
-            throw new UserUnauthorizedException("Only the receiver of the connection request can respond to it");
+            throw new BadRequestException("Only the receiver of the connection request can respond to it");
         }
 
         if(Objects.equals(connectReplyRequest.getAction(), "ACCEPT")){
+            System.out.println("accepted invite");
             connection.setStatus(ConnectionStatus.ACCEPTED);
-            ConnectReplyResponseAccept connectReplyResponseAccept =
-                    ConnectReplyResponseAccept.builder()
-                            .acceptedAt(LocalDateTime.now())
-                            .fromUserId(connection.getFromUser().getId())
-                            .id(connection.getId())
-                            .toUserId(currentUserId)
-                            .status("ACCEPTED")
-                            .build();
-            return connectReplyResponseAccept;
+            connectionRepository.save(connection);
+            return ConnectReplyResponseAccept.builder()
+                    .acceptedAt(LocalDateTime.now())
+                    .fromUserId(connection.getFromUser().getId())
+                    .id(connection.getId())
+                    .toUserId(currentUserId)
+                    .status("ACCEPTED")
+                    .build();
         }
         else if(Objects.equals(connectReplyRequest.getAction(), "REJECT")){
             connection.setStatus(ConnectionStatus.REJECTED);
-
-            ConnectReplyResponseReject connectReplyResponseReject =
-                    ConnectReplyResponseReject.builder()
-                            .rejectedAt(LocalDateTime.now())
-                            .fromUserId(connection.getFromUser().getId())
-                            .id(connection.getId())
-                            .toUserId(currentUserId)
-                                .status("REJECTED")
-                            .build();
-            return connectReplyResponseReject;
+            connectionRepository.save(connection);
+            return ConnectReplyResponseReject.builder()
+                    .rejectedAt(LocalDateTime.now())
+                    .fromUserId(connection.getFromUser().getId())
+                    .id(connection.getId())
+                    .toUserId(currentUserId)
+                    .status("REJECTED")
+                    .build();
         }
         return null;
     }

@@ -1,12 +1,14 @@
 package com.example.java.dto.response;
 
 import lombok.Builder;
+import lombok.Getter;
 
 import java.security.Timestamp;
 import java.time.LocalDateTime;
 
 @Builder
-public class ConnectReplyResponseReject {
+@Getter
+public class ConnectReplyResponseReject extends ConnectReplyResponse{
     private Long id;
     private Long fromUserId;
     private Long toUserId;

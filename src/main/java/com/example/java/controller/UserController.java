@@ -4,6 +4,7 @@ package com.example.java.controller;
 import com.example.java.dto.request.ConnectReplyRequest;
 import com.example.java.dto.request.ConnectRequest;
 import com.example.java.dto.request.UserCreateRequest;
+import com.example.java.dto.response.ConnectReplyResponse;
 import com.example.java.dto.response.ConnectRequestResponse;
 import com.example.java.dto.response.UserCreateResponse;
 import com.example.java.service.UserService;
@@ -31,11 +32,11 @@ public class UserController {
             @RequestHeader("current_user_id") Long current_user_id,
             @RequestBody ConnectRequest connectRequest
     ){
-        return ResponseEntity.ok(userService.connectRequest(current_user_id, connectRequest));
+        return ResponseEntity.status(HttpStatus.CREATED).body(userService.connectRequest(current_user_id, connectRequest));
     }
 
     @PatchMapping("/connect/respond")
-    public ResponseEntity<?> connectRespond(
+    public ResponseEntity<ConnectReplyResponse> connectRespond(
             @RequestHeader("current_user_id") Long current_user_id,
             @Valid @RequestBody ConnectReplyRequest connectReplyRequest
     ){
